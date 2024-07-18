@@ -34,7 +34,8 @@ function main() {
         }
     }
 
-    "RequestedResolutionMs,DeltaMs,STDEV" | Out-File results.txt
+    $resultsFile = "results.txt"
+    "RequestedResolutionMs,DeltaMs,STDEV" | Out-File $resultsFile
 
     for ($i = $start; $i -le $end; $i += $increment) {
         Write-Host "info: benchmarking $($i)ms"
@@ -58,15 +59,21 @@ function main() {
             }
         }
 
-        "$($i), $([math]::Round([double]$avg, 3)), $($stdev)" | Out-File results.txt -Append
+        "$($i), $([math]::Round([double]$avg, 3)), $($stdev)" | Out-File $resultsFile -Append
 
         Stop-Process -Name "SetTimerResolution" -ErrorAction SilentlyContinue
     }
 
-    Write-Host "info: results saved in results.txt"
+    Stop-Process -Name prime95 -Force
+    Write-Host "info: $resultsFile saved."
+
+    $desktopPath = [Environment]::GetFolderPath("Desktop")
+    $desktopResultsFile = Join-Path -Path $desktopPath -ChildPath $resultsFile
+    Move-Item -Path $resultsFile -Destination $desktopResultsFile -Force
+    Write-Host "info: $resultsFile moved to desktop."
+
     return 0
 }
 
-$_exitCode = main
-Write-Host # new line
-exit $_exitCode
+main
+
